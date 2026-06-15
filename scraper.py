@@ -1,6 +1,9 @@
 import re
+import logging
 import requests
 from bs4 import BeautifulSoup
+
+log = logging.getLogger(__name__)
 
 URL = "https://bitcointreasuries.net/public-companies/strategy"
 HEADERS = {
@@ -13,9 +16,9 @@ HEADERS = {
 
 
 def _extract_float(text):
-    """'0.72×', '0.002407' 같은 문자열에서 float 추출"""
-    cleaned = re.sub(r"[^\d.]", "", text.strip())
-    return float(cleaned) if cleaned else None
+    """'0.72×', '0.002407' 같은 문자열에서 첫 번째 숫자 추출"""
+    match = re.search(r"\d+\.?\d*", text.strip())
+    return float(match.group()) if match else None
 
 
 def parse_mnav_page(html):
@@ -74,8 +77,8 @@ def fetch_mnav(config):
                 "btc_per_share_diluted": data["btc_per_share_diluted"],
                 "source": "scrape",
             }
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning("bitcointreasuries 스크래핑 실패: %s", e)
 
     override = config.get("mnav_override")
     if override is not None:
