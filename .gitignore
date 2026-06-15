@@ -1,7 +1,12 @@
 .env
+.env.local
 __pycache__/
 *.pyc
+*.pyo
+.pytest_cache/
 state.json
-mstr_bot.log
+*.log
 venv/
 .venv/
+.idea/
+.vscode/
