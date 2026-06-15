@@ -18,6 +18,8 @@ def compute_targets(signal_direction, mstr_price, nav_per_share, atr14):
     """
     if signal_direction == "watch" or nav_per_share is None:
         return None
+    if not mstr_price or mstr_price <= 0:
+        return None
 
     if signal_direction == "long":
         tp1 = nav_per_share * 1.5
