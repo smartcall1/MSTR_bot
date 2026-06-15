@@ -13,7 +13,6 @@ SIGNAL_LABELS = {
     -4: "STRONG SHORT", -5: "STRONG SHORT", -6: "STRONG SHORT",
 }
 
-HL_API = "https://api.hyperliquid.xyz/info"
 BINANCE_FAPI = "https://fapi.binance.com/fapi/v1/premiumIndex"
 
 
@@ -234,7 +233,7 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, config):
             "error": False,
         })
     else:
-        errors.append("Hyperliquid(펀딩)")
+        errors.append("Binance(펀딩)")
         indicators.append({"name": "MSTR 펀딩", "value_str": "N/A", "score": 0, "error": True})
 
     scores = [ind["score"] for ind in indicators]
