@@ -14,6 +14,7 @@ SIGNAL_LABELS = {
 }
 
 HL_API = "https://api.hyperliquid.xyz/info"
+BINANCE_FAPI = "https://fapi.binance.com/fapi/v1/premiumIndex"
 
 
 def score_mnav(value):
@@ -125,30 +126,28 @@ def fetch_yfinance_data():
 
 
 def fetch_mstr_funding_rate():
-    """Hyperliquid에서 MSTR 펀딩레이트(8h) 조회. 실패 시 None."""
+    """Binance USDT-M 선물에서 MSTR 펀딩레이트(8h) 조회. 실패 시 None.
+
+    Note: Hyperliquid에는 MSTR(MicroStrategy) 종목이 상장되어 있지 않음.
+          Binance MSTRUSDT 퍼프 선물에서 lastFundingRate를 사용.
+    """
     try:
-        resp = requests.post(
-            HL_API,
-            json={"type": "metaAndAssetCtxs"},
+        resp = requests.get(
+            BINANCE_FAPI,
+            params={"symbol": "MSTRUSDT"},
             timeout=15,
         )
         resp.raise_for_status()
         data = resp.json()
 
-        universe = data[0]["universe"]
-        asset_ctxs = data[1]
-
-        mstr_idx = next(
-            (i for i, a in enumerate(universe) if a["name"] == "MSTR"),
-            None,
-        )
-        if mstr_idx is None:
-            log.warning("Hyperliquid universe에서 MSTR을 찾을 수 없음")
+        rate = data.get("lastFundingRate")
+        if rate is None:
+            log.warning("Binance MSTRUSDT 응답에 lastFundingRate 없음: %s", data)
             return None
 
-        return float(asset_ctxs[mstr_idx]["funding"])
+        return float(rate)
     except Exception as e:
-        log.warning("Hyperliquid 펀딩레이트 수집 실패: %s", e)
+        log.warning("Binance MSTR 펀딩레이트 수집 실패: %s", e)
         return None
 
 
