@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 import requests
 from dotenv import load_dotenv
 
-from scraper import fetch_mnav
+from scraper import fetch_mnav, fetch_btc_yield
 from signals import fetch_yfinance_data, fetch_mstr_funding_rate, compute_all_indicators
 from targets import compute_nav_per_share, compute_targets, compute_funding_cost
 
@@ -159,9 +159,10 @@ def run_cycle(token, chat_id):
     mnav_result = fetch_mnav(config)
     market_data = fetch_yfinance_data()
     funding_rate = fetch_mstr_funding_rate()
+    btc_yield_result = fetch_btc_yield(config)
 
     indicators, total, signal, errors = compute_all_indicators(
-        mnav_result, market_data, funding_rate, config
+        mnav_result, market_data, funding_rate, btc_yield_result, config
     )
 
     if errors:

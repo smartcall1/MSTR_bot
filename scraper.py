@@ -14,6 +14,16 @@ HEADERS = {
     )
 }
 
+PRESS_URL = "https://www.strategy.com/press"
+DESKTOP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    )
+}
+BTC_YIELD_RE = re.compile(r"BTC Yield of ([\d.]+)%\s*YTD", re.IGNORECASE)
+
 
 def _extract_float(text):
     """'0.72×', '0.002407' 같은 문자열에서 첫 번째 숫자 추출"""
@@ -87,5 +97,29 @@ def fetch_mnav(config):
             "btc_per_share_diluted": None,
             "source": "config",
         }
+
+    return None
+
+
+def fetch_btc_yield(config):
+    """
+    strategy.com 보도자료 목록(최신순)에서 가장 최근 "BTC Yield of X% YTD" 문구를 스크래핑.
+    실패 또는 미발견 시 config["btc_yield"] 폴백.
+    반환: {"btc_yield": float, "source": str} 또는 None (완전 실패)
+    """
+    try:
+        resp = requests.get(PRESS_URL, headers=DESKTOP_HEADERS, timeout=15)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for a in soup.find_all("a", href=re.compile(r"^/press/")):
+            match = BTC_YIELD_RE.search(a.get_text())
+            if match:
+                return {"btc_yield": float(match.group(1)), "source": "scrape"}
+    except Exception as e:
+        log.warning("strategy.com BTC Yield 스크래핑 실패: %s", e)
+
+    override = config.get("btc_yield")
+    if override is not None:
+        return {"btc_yield": float(override), "source": "config"}
 
     return None

@@ -150,7 +150,7 @@ def fetch_mstr_funding_rate():
         return None
 
 
-def compute_all_indicators(mnav_result, market_data, funding_rate, config):
+def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_result, config):
     """
     모든 지표를 계산하여 결과 반환.
     Returns: indicators (list), total_score (int), signal (str), errors (list)
@@ -172,16 +172,20 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, config):
         errors.append("mNAV")
         indicators.append({"name": "mNAV(Diluted)", "value_str": "N/A", "score": 0, "error": True})
 
-    # 2. BTC Yield (수동)
-    btc_yield = config.get("btc_yield")
-    sc = score_btc_yield(btc_yield)
-    indicators.append({
-        "name": "BTC Yield",
-        "value_str": f"{btc_yield:.1f}%" if btc_yield is not None else "N/A",
-        "score": sc,
-        "error": False,
-        "manual": True,
-    })
+    # 2. BTC Yield (strategy.com 보도자료 자동 스크래핑, 실패 시 config 폴백)
+    if btc_yield_result:
+        btc_yield = btc_yield_result["btc_yield"]
+        sc = score_btc_yield(btc_yield)
+        note = " (config)" if btc_yield_result["source"] == "config" else ""
+        indicators.append({
+            "name": "BTC Yield",
+            "value_str": f"{btc_yield:.1f}%{note}",
+            "score": sc,
+            "error": False,
+        })
+    else:
+        errors.append("BTC Yield")
+        indicators.append({"name": "BTC Yield", "value_str": "N/A", "score": 0, "error": True})
 
     # 3. ATM Pace (수동)
     atm_pace = config.get("atm_pace")
