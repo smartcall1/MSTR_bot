@@ -86,24 +86,15 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
 
     lines = []
     prefix = "☀️ [일일 요약] " if is_daily else ""
-    lines.append(f"{prefix}{sig_emoji} MSTR Signal: {signal}  (Score: {total:+d}/6)")
+    lines.append(f"{prefix}{sig_emoji} MSTR Signal: {signal}  (Score: {total:+d}/5)")
     lines.append("")
 
-    auto = [ind for ind in indicators if not ind.get("manual")]
     lines.append("📊 자동 지표:")
-    for ind in auto:
+    for ind in indicators:
         emoji = "❌" if ind["error"] else SCORE_EMOJI[ind["score"]]
         direction = "" if ind["error"] else {1: "LONG", 0: "WATCH", -1: "SHORT"}[ind["score"]]
         err_note = " (스크래핑 실패)" if ind["error"] else ""
         lines.append(f"  {ind['name']:<18} {ind['value_str']:<12} → {emoji} {direction}{err_note}")
-
-    manual = [ind for ind in indicators if ind.get("manual")]
-    lines.append("")
-    lines.append("⚙️ 수동 (config):")
-    for ind in manual:
-        emoji = SCORE_EMOJI[ind["score"]]
-        direction = {1: "LONG", 0: "WATCH", -1: "SHORT"}[ind["score"]]
-        lines.append(f"  {ind['name']:<18} {ind['value_str']:<12} → {emoji} {direction}")
 
     if targets_result and mstr_price:
         lines.append("")

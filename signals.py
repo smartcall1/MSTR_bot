@@ -6,11 +6,11 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 SIGNAL_LABELS = {
-    6: "STRONG LONG", 5: "STRONG LONG", 4: "STRONG LONG",
+    5: "STRONG LONG", 4: "STRONG LONG",
     3: "LONG BIAS", 2: "LONG BIAS",
     1: "WATCH / NEUTRAL", 0: "WATCH / NEUTRAL", -1: "WATCH / NEUTRAL",
     -2: "CAUTION", -3: "CAUTION",
-    -4: "STRONG SHORT", -5: "STRONG SHORT", -6: "STRONG SHORT",
+    -4: "STRONG SHORT", -5: "STRONG SHORT",
 }
 
 BINANCE_FAPI = "https://fapi.binance.com/fapi/v1/premiumIndex"
@@ -32,16 +32,6 @@ def score_btc_yield(value):
     if value > 15:
         return 1
     if value < 0:
-        return -1
-    return 0
-
-
-def score_atm_pace(value):
-    if value is None:
-        return 0
-    if value == 0:
-        return 1
-    if value >= 2:
         return -1
     return 0
 
@@ -187,19 +177,7 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_res
         errors.append("BTC Yield")
         indicators.append({"name": "BTC Yield", "value_str": "N/A", "score": 0, "error": True})
 
-    # 3. ATM Pace (수동)
-    atm_pace = config.get("atm_pace")
-    pace_labels = {0: "중단", 1: "보통", 2: "적극", 3: "공격적"}
-    sc = score_atm_pace(atm_pace)
-    indicators.append({
-        "name": "ATM Pace",
-        "value_str": pace_labels.get(atm_pace, "N/A"),
-        "score": sc,
-        "error": False,
-        "manual": True,
-    })
-
-    # 4. vs MA200
+    # 3. vs MA200
     if market_data:
         sc = score_ma200(market_data["mstr_price"], market_data["ma200"])
         pct = (market_data["mstr_price"] - market_data["ma200"]) / market_data["ma200"] * 100
@@ -213,7 +191,7 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_res
         errors.append("yfinance(MA200)")
         indicators.append({"name": "vs MA200", "value_str": "N/A", "score": 0, "error": True})
 
-    # 5. MSTR/BTC 상대강도
+    # 4. MSTR/BTC 상대강도
     if market_data:
         sc = score_rs_30d(market_data["mstr_30d"], market_data["btc_30d"])
         diff = market_data["mstr_30d"] - market_data["btc_30d"]
@@ -227,7 +205,7 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_res
         errors.append("yfinance(RS)")
         indicators.append({"name": "MSTR/BTC RS", "value_str": "N/A", "score": 0, "error": True})
 
-    # 6. MSTR 펀딩레이트
+    # 5. MSTR 펀딩레이트
     if funding_rate is not None:
         sc = score_funding_rate(funding_rate)
         indicators.append({

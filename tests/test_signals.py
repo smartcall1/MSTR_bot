@@ -4,7 +4,7 @@ import pandas as pd
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from signals import (
-    score_mnav, score_btc_yield, score_atm_pace,
+    score_mnav, score_btc_yield,
     score_ma200, score_rs_30d, score_funding_rate,
     compute_score, SIGNAL_LABELS,
 )
@@ -29,16 +29,6 @@ def test_score_btc_yield_short():
 
 def test_score_btc_yield_none_is_watch():
     assert score_btc_yield(None) == 0
-
-def test_score_atm_pace_long():
-    assert score_atm_pace(0) == 1
-
-def test_score_atm_pace_watch():
-    assert score_atm_pace(1) == 0
-
-def test_score_atm_pace_short():
-    assert score_atm_pace(2) == -1
-    assert score_atm_pace(3) == -1
 
 def test_score_ma200_long():
     assert score_ma200(current=110, ma200=100) == 1

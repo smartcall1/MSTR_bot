@@ -1,11 +1,9 @@
 {
   "btc_holdings": 845256,
   "btc_yield": 10.0,
-  "atm_pace": 1,
   "mnav_override": null,
   "_comment": {
-    "btc_yield": "연환산 %. 분기 업데이트. null이면 Watch(0) 처리",
-    "atm_pace": "0=중단, 1=보통, 2=적극, 3=공격적",
+    "btc_yield": "strategy.com 보도자료 스크래핑 실패 시 폴백값. 연환산 %",
     "mnav_override": "스크래핑 실패 시 수동 입력. null이면 자동 스크래핑",
     "btc_holdings": "MSTR BTC 보유량. 공시 후 업데이트"
   }
