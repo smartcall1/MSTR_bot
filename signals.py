@@ -86,8 +86,8 @@ def fetch_yfinance_data():
         mstr = yf.Ticker("MSTR")
         btc = yf.Ticker("BTC-USD")
 
-        mstr_hist = mstr.history(period="1y")
-        btc_hist = btc.history(period="40d")
+        mstr_hist = mstr.history(period="1y").dropna(subset=["Close"])
+        btc_hist = btc.history(period="40d").dropna(subset=["Close"])
 
         if mstr_hist.empty or btc_hist.empty:
             return None
