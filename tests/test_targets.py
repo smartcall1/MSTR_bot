@@ -60,6 +60,28 @@ def test_compute_targets_short():
     assert result["sl_price"] == pytest.approx(mstr_price + 2 * atr14, rel=0.001)
 
 
+def test_compute_targets_long_returns_none_when_mnav_disagrees_with_direction():
+    # mstr_price(124.5)가 이미 tp1(nav*1.5=120.0)보다 비쌈 — mNAV가 long 방향과 어긋남
+    result = compute_targets(
+        signal_direction="long",
+        mstr_price=124.5,
+        nav_per_share=80.0,
+        atr14=8.0,
+    )
+    assert result is None
+
+
+def test_compute_targets_short_returns_none_when_mnav_disagrees_with_direction():
+    # mstr_price(124.5)가 이미 tp1(nav*1.2=216.0)보다 싸짐 — mNAV가 short 방향과 어긋남
+    result = compute_targets(
+        signal_direction="short",
+        mstr_price=124.5,
+        nav_per_share=180.0,
+        atr14=8.0,
+    )
+    assert result is None
+
+
 def test_compute_targets_returns_none_for_watch():
     result = compute_targets(
         signal_direction="watch",

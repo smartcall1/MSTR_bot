@@ -25,10 +25,16 @@ def compute_targets(signal_direction, mstr_price, nav_per_share, atr14):
         tp1 = nav_per_share * 1.5
         tp2 = nav_per_share * 2.0
         sl = mstr_price - (2 * atr14)
+        if tp1 <= mstr_price:
+            # mNAV가 시그널 방향과 어긋남 (이미 목표가보다 비싸게 거래 중) — 잘못된 숫자를 보여주는 대신 생략
+            return None
     else:  # short
         tp1 = nav_per_share * 1.2
         tp2 = nav_per_share * 0.9
         sl = mstr_price + (2 * atr14)
+        if tp1 >= mstr_price:
+            # mNAV가 시그널 방향과 어긋남 (이미 목표가보다 싸게 거래 중) — 잘못된 숫자를 보여주는 대신 생략
+            return None
 
     return {
         "tp1_price": tp1,
