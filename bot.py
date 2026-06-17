@@ -43,6 +43,14 @@ SIGNAL_DIRECTION = {
     "CAUTION": "short",
     "STRONG SHORT": "short",
 }
+SIGNAL_LABELS_KO = {
+    "STRONG LONG": "강력 롱",
+    "LONG BIAS": "롱 우위",
+    "WATCH / NEUTRAL": "관망",
+    "CAUTION": "주의 (숏 권고)",
+    "STRONG SHORT": "강력 숏",
+}
+INDICATOR_DIRECTION_KO = {1: "롱", 0: "관망", -1: "숏"}
 
 
 def load_config():
@@ -86,13 +94,14 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
 
     lines = []
     prefix = "☀️ [일일 요약] " if is_daily else ""
-    lines.append(f"{prefix}{sig_emoji} MSTR Signal: {signal}  (Score: {total:+d})")
+    signal_ko = SIGNAL_LABELS_KO.get(signal, signal)
+    lines.append(f"{prefix}{sig_emoji} MSTR 시그널: {signal_ko}  (점수: {total:+d})")
     lines.append("")
 
     lines.append("📊 자동 지표:")
     for ind in indicators:
         emoji = "❌" if ind["error"] else SCORE_EMOJI[ind["score"]]
-        direction = "" if ind["error"] else {1: "LONG", 0: "WATCH", -1: "SHORT"}[ind["score"]]
+        direction = "" if ind["error"] else INDICATOR_DIRECTION_KO[ind["score"]]
         err_note = " (스크래핑 실패)" if ind["error"] else ""
         lines.append(f"  {ind['name']:<18} {ind['value_str']:<12} → {emoji} {direction}{err_note}")
 
@@ -123,7 +132,8 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
     lines.append(f"🕐 {ts}")
 
     if prev_signal and prev_signal != signal:
-        lines.append(f"⚠️ 시그널 변경: {prev_signal} → {signal}")
+        prev_signal_ko = SIGNAL_LABELS_KO.get(prev_signal, prev_signal)
+        lines.append(f"⚠️ 시그널 변경: {prev_signal_ko} → {signal_ko}")
 
     if errors:
         lines.append(f"❌ 데이터 실패: {', '.join(errors)}")
