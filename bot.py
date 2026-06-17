@@ -79,7 +79,7 @@ def should_send_alert(signal, score, state):
     return False, False
 
 
-def format_message(indicators, total, signal, targets_result, funding_rate, mstr_price, is_daily, prev_signal, errors):
+def format_message(indicators, total, signal, targets_result, funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe):
     kst_now = datetime.now(KST)
     ts = kst_now.strftime("%Y-%m-%d %H:%M KST")
     sig_emoji = SIGNAL_EMOJI.get(signal, "🟡")
@@ -128,6 +128,9 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
     if errors:
         lines.append(f"❌ 데이터 실패: {', '.join(errors)}")
 
+    if strc_severe:
+        lines.append(f"⚠️ STRC 심각 디페그 — 신용 스트레스로 STRONG SHORT 강제 (원점수 {total:+d})")
+
     return "\n".join(lines)
 
 
@@ -152,7 +155,7 @@ def run_cycle(token, chat_id):
     funding_rate = fetch_mstr_funding_rate()
     btc_yield_result = fetch_btc_yield(config)
 
-    indicators, total, signal, errors = compute_all_indicators(
+    indicators, total, signal, errors, strc_severe = compute_all_indicators(
         mnav_result, market_data, funding_rate, btc_yield_result, config
     )
 
@@ -181,7 +184,7 @@ def run_cycle(token, chat_id):
     if send:
         message = format_message(
             indicators, total, signal, targets_result,
-            funding_rate, mstr_price, is_daily, prev_signal, errors
+            funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe
         )
         try:
             send_telegram(token, chat_id, message)
