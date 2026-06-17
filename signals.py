@@ -248,7 +248,24 @@ def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_res
         errors.append("Binance(펀딩)")
         indicators.append({"name": "MSTR 펀딩", "value_str": "N/A", "score": 0, "error": True})
 
-    scores = [ind["score"] for ind in indicators]
-    total, signal = compute_score(scores)
+    # 6. STRC 디페그 (Strategy 우선주 신용 스트레스 — 편측 리스크 지표)
+    strc_price = market_data.get("strc_price") if market_data else None
+    if strc_price is not None:
+        sc = score_strc_depeg(strc_price)
+        deviation_pct = (strc_price - 100) / 100 * 100
+        indicators.append({
+            "name": "STRC 디페그",
+            "value_str": f"${strc_price:.2f} ({deviation_pct:+.1f}% vs par)",
+            "score": sc,
+            "error": False,
+        })
+        strc_severe = is_strc_severe_depeg(strc_price)
+    else:
+        errors.append("yfinance(STRC)")
+        indicators.append({"name": "STRC 디페그", "value_str": "N/A", "score": 0, "error": True})
+        strc_severe = False
 
-    return indicators, total, signal, errors
+    scores = [ind["score"] for ind in indicators]
+    total, signal = compute_score(scores, strc_severe)
+
+    return indicators, total, signal, errors, strc_severe

@@ -7,7 +7,7 @@ from signals import (
     score_mnav, score_btc_yield,
     score_ma200, score_rs_30d, score_funding_rate,
     score_strc_depeg, is_strc_severe_depeg,
-    compute_score, SIGNAL_LABELS,
+    compute_score, compute_all_indicators, SIGNAL_LABELS,
 )
 
 def test_score_mnav_long():
@@ -192,3 +192,42 @@ def test_compute_score_not_severe_leaves_signal_unchanged():
     total, signal = compute_score([1, 1, 1, 1, 0, 0], strc_severe_depeg=False)
     assert total == 4
     assert signal == "STRONG LONG"
+
+
+def _base_market_data(strc_price):
+    return {
+        "mstr_price": 110.0, "btc_price": 50000.0, "ma200": 100.0,
+        "mstr_30d": 5.0, "btc_30d": 5.0, "atr14": 5.0,
+        "strc_price": strc_price,
+    }
+
+def test_compute_all_indicators_includes_strc_indicator():
+    market_data = _base_market_data(94.0)
+    indicators, total, signal, errors, strc_severe = compute_all_indicators(
+        mnav_result=None, market_data=market_data, funding_rate=None,
+        btc_yield_result=None, config={},
+    )
+    strc_ind = next(i for i in indicators if i["name"] == "STRC 디페그")
+    assert strc_ind["score"] == -1
+    assert strc_ind["error"] is False
+    assert strc_severe is False
+
+def test_compute_all_indicators_strc_severe_forces_strong_short():
+    market_data = _base_market_data(89.0)
+    indicators, total, signal, errors, strc_severe = compute_all_indicators(
+        mnav_result={"mnav_diluted": 0.9, "btc_per_share_diluted": 1.0},
+        market_data=market_data, funding_rate=0.00005,
+        btc_yield_result={"btc_yield": 20.0, "source": "scrape"}, config={},
+    )
+    assert strc_severe is True
+    assert signal == "STRONG SHORT"
+
+def test_compute_all_indicators_strc_na_when_market_data_none():
+    indicators, total, signal, errors, strc_severe = compute_all_indicators(
+        mnav_result=None, market_data=None, funding_rate=None,
+        btc_yield_result=None, config={},
+    )
+    strc_ind = next(i for i in indicators if i["name"] == "STRC 디페그")
+    assert strc_ind["error"] is True
+    assert "yfinance(STRC)" in errors
+    assert strc_severe is False
