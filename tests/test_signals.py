@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from signals import (
     score_mnav, score_btc_yield,
     score_ma200, score_rs_30d, score_funding_rate,
+    score_strc_depeg, is_strc_severe_depeg,
     compute_score, SIGNAL_LABELS,
 )
 
@@ -56,6 +57,30 @@ def test_score_funding_rate_watch():
 
 def test_score_funding_rate_short():
     assert score_funding_rate(0.0006) == -1
+
+def test_score_strc_depeg_none_is_watch():
+    assert score_strc_depeg(None) == 0
+
+def test_score_strc_depeg_at_par():
+    assert score_strc_depeg(100.0) == 0
+
+def test_score_strc_depeg_at_threshold_is_watch():
+    assert score_strc_depeg(95.0) == 0  # discount == 5%, not > 5
+
+def test_score_strc_depeg_mild_depeg_is_short():
+    assert score_strc_depeg(94.0) == -1  # discount 6% > 5%
+
+def test_score_strc_depeg_premium_is_watch():
+    assert score_strc_depeg(102.0) == 0  # premium is not bullish
+
+def test_is_strc_severe_depeg_none_is_false():
+    assert is_strc_severe_depeg(None) is False
+
+def test_is_strc_severe_depeg_at_threshold_is_false():
+    assert is_strc_severe_depeg(90.0) is False  # discount == 10%, not > 10
+
+def test_is_strc_severe_depeg_beyond_threshold_is_true():
+    assert is_strc_severe_depeg(89.0) is True  # discount 11% > 10%
 
 def test_compute_score_returns_correct_total():
     indicator_scores = [1, 0, 0, 1, 1, 0]

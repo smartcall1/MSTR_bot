@@ -64,6 +64,25 @@ def score_funding_rate(rate_8h):
     return 0
 
 
+def score_strc_depeg(strc_price):
+    """STRC(우선주) 디페그 점수. 할인율 5% 초과(<$95)면 -1, 그 외 0.
+    프리미엄/패리티는 호재가 아니므로 +1은 없음 (편측 리스크 지표)."""
+    if strc_price is None:
+        return 0
+    discount_pct = (100 - strc_price) / 100 * 100
+    if discount_pct > 5:
+        return -1
+    return 0
+
+
+def is_strc_severe_depeg(strc_price):
+    """할인율 10% 초과(<$90)면 심각 디페그 — 리스크 오버라이드 트리거."""
+    if strc_price is None:
+        return False
+    discount_pct = (100 - strc_price) / 100 * 100
+    return discount_pct > 10
+
+
 def compute_score(indicator_scores):
     total = sum(indicator_scores)
     signal = SIGNAL_LABELS.get(total, "WATCH / NEUTRAL")
