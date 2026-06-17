@@ -87,13 +87,13 @@ def should_send_alert(signal, score, state):
     return False, False
 
 
-def format_message(indicators, total, signal, targets_result, funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe):
+def format_message(indicators, total, signal, targets_result, funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe, is_startup=False):
     kst_now = datetime.now(KST)
     ts = kst_now.strftime("%Y-%m-%d %H:%M KST")
     sig_emoji = SIGNAL_EMOJI.get(signal, "🟡")
 
     lines = []
-    prefix = "☀️ [일일 요약] " if is_daily else ""
+    prefix = "🤖 [봇 시작 확인] " if is_startup else ("☀️ [일일 요약] " if is_daily else "")
     signal_ko = SIGNAL_LABELS_KO.get(signal, signal)
     lines.append(f"{prefix}{sig_emoji} MSTR 시그널: {signal_ko}  (점수: {total:+d})")
     lines.append("")
@@ -155,7 +155,7 @@ def send_telegram(token, chat_id, text):
     resp.raise_for_status()
 
 
-def run_cycle(token, chat_id):
+def run_cycle(token, chat_id, force_send=False):
     config = load_config()
     state = load_state()
 
@@ -191,11 +191,14 @@ def run_cycle(token, chat_id):
 
     prev_signal = state.get("last_signal")
     send, is_daily = should_send_alert(signal, total, state)
+    if force_send:
+        send = True
 
     if send:
         message = format_message(
             indicators, total, signal, targets_result,
-            funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe
+            funding_rate, mstr_price, is_daily, prev_signal, errors, strc_severe,
+            is_startup=force_send,
         )
         try:
             send_telegram(token, chat_id, message)
@@ -226,11 +229,13 @@ def main():
 
     log.info("MSTR 시그널 봇 시작")
 
+    first_run = True
     while True:
         try:
-            run_cycle(token, chat_id)
+            run_cycle(token, chat_id, force_send=first_run)
         except Exception as e:
             log.error("사이클 오류: %s", e)
+        first_run = False
         log.info("%d시간 후 재실행", INTERVAL_SEC // 3600)
         time.sleep(INTERVAL_SEC)
 
