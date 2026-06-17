@@ -117,10 +117,11 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
         tp1_pct = targets_result["tp1_pct"]
         tp2_pct = targets_result["tp2_pct"]
         sl_pct = targets_result["sl_pct"]
-        tp1_mult, tp2_mult = (1.5, 2.0) if direction_str == "long" else (1.2, 0.9)
+        tp1_label = targets_result.get("tp1_label", "")
+        tp2_label = targets_result.get("tp2_label", "")
         lines.append(f"    SL:  ${sl_p:.2f}  ({sl_pct:+.1f}%)  [2×ATR14]")
-        lines.append(f"    TP1: ${tp1_p:.2f}  ({tp1_pct:+.1f}%)  [mNAV {tp1_mult}×]")
-        lines.append(f"    TP2: ${tp2_p:.2f}  ({tp2_pct:+.1f}%)  [mNAV {tp2_mult}×]")
+        lines.append(f"    TP1: ${tp1_p:.2f}  ({tp1_pct:+.1f}%)  [{tp1_label}]")
+        lines.append(f"    TP2: ${tp2_p:.2f}  ({tp2_pct:+.1f}%)  [{tp2_label}]")
 
         if funding_rate is not None:
             daily = compute_funding_cost(funding_rate, 100)
