@@ -101,6 +101,9 @@ def fetch_yfinance_data():
         ], axis=1).max(axis=1)
         atr14 = float(tr.rolling(14).mean().iloc[-1])
 
+        strc_hist = yf.Ticker("STRC").history(period="5d").dropna(subset=["Close"])
+        strc_price = float(strc_hist["Close"].iloc[-1]) if not strc_hist.empty else None
+
         return {
             "mstr_price": mstr_price,
             "btc_price": btc_price,
@@ -108,6 +111,7 @@ def fetch_yfinance_data():
             "mstr_30d": mstr_30d,
             "btc_30d": btc_30d,
             "atr14": atr14,
+            "strc_price": strc_price,
         }
     except Exception as e:
         log.warning("yfinance 데이터 수집 실패: %s", e)

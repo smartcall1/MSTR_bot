@@ -77,3 +77,57 @@ def test_compute_score_neutral():
     total, signal = compute_score([0, 0, 0, 0, 0, 0])
     assert total == 0
     assert signal == "WATCH / NEUTRAL"
+
+
+def test_fetch_yfinance_data_includes_strc_price():
+    mock_mstr_hist = pd.DataFrame({
+        "Close": [100.0] * 199 + [110.0],
+        "High": [105.0] * 200,
+        "Low": [95.0] * 200,
+    })
+    mock_btc_hist = pd.DataFrame({"Close": [50000.0] * 40})
+    mock_strc_hist = pd.DataFrame({"Close": [94.5]})
+
+    def ticker_side_effect(symbol):
+        m = MagicMock()
+        if symbol == "MSTR":
+            m.history.return_value = mock_mstr_hist
+        elif symbol == "BTC-USD":
+            m.history.return_value = mock_btc_hist
+        elif symbol == "STRC":
+            m.history.return_value = mock_strc_hist
+        return m
+
+    with patch("signals.yf.Ticker", side_effect=ticker_side_effect):
+        from signals import fetch_yfinance_data
+        result = fetch_yfinance_data()
+
+    assert result is not None
+    assert result["strc_price"] == 94.5
+
+
+def test_fetch_yfinance_data_strc_price_none_when_empty():
+    mock_mstr_hist = pd.DataFrame({
+        "Close": [100.0] * 199 + [110.0],
+        "High": [105.0] * 200,
+        "Low": [95.0] * 200,
+    })
+    mock_btc_hist = pd.DataFrame({"Close": [50000.0] * 40})
+    mock_strc_hist = pd.DataFrame({"Close": []})
+
+    def ticker_side_effect(symbol):
+        m = MagicMock()
+        if symbol == "MSTR":
+            m.history.return_value = mock_mstr_hist
+        elif symbol == "BTC-USD":
+            m.history.return_value = mock_btc_hist
+        elif symbol == "STRC":
+            m.history.return_value = mock_strc_hist
+        return m
+
+    with patch("signals.yf.Ticker", side_effect=ticker_side_effect):
+        from signals import fetch_yfinance_data
+        result = fetch_yfinance_data()
+
+    assert result is not None
+    assert result["strc_price"] is None
