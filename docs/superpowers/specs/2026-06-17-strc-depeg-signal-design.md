@@ -32,7 +32,7 @@ def is_strc_severe_depeg(strc_price):
 ```
 
 ## 리스크 오버라이드 (캡)
-심각 디페그(`is_strc_severe_depeg() == True`) 시, 다른 지표 합산 결과가 아무리 좋아도 최종 시그널을 CAUTION 이하로 강제 제한.
+심각 디페그(`is_strc_severe_depeg() == True`) 시, 다른 지표 합산 결과가 아무리 좋아도 최종 시그널을 **STRONG SHORT로 강제**. (1차 설계는 CAUTION 캡이었으나, 사용자 피드백으로 변경: mNAV 등 다른 지표의 LONG 신호가 STRC 디페그와 같은 근본 원인(세일러 자금 경색)의 다른 증상일 수 있어 독립적이지 않으므로, 약한 "주의" 수준이 아니라 명확한 SHORT 결론을 내야 함.)
 
 심각도 순서: `STRONG LONG(2) > LONG BIAS(1) > WATCH/NEUTRAL(0) > CAUTION(-1) > STRONG SHORT(-2)`
 
@@ -46,10 +46,12 @@ SIGNAL_SEVERITY = {
 def compute_score(indicator_scores, strc_severe_depeg=False):
     total = sum(indicator_scores)
     signal = SIGNAL_LABELS.get(total, "WATCH / NEUTRAL")
-    if strc_severe_depeg and SIGNAL_SEVERITY[signal] > SIGNAL_SEVERITY["CAUTION"]:
-        signal = "CAUTION"
+    if strc_severe_depeg and SIGNAL_SEVERITY[signal] > SIGNAL_SEVERITY["STRONG SHORT"]:
+        signal = "STRONG SHORT"
     return total, signal
 ```
+
+**점수-라벨 표시 불일치 처리**: 캡이 적용되면 `total`(원래 합산 점수, 예: +4)과 `signal`(STRONG SHORT)이 모순되게 보일 수 있음. 메시지에 `total`은 원래 값 그대로 표시하고, 캡이 적용된 경우 별도 줄에 `(원점수 {total:+d}, STRC 심각 디페그로 STRONG SHORT 강제)` 주석을 덧붙여 투명하게 표시.
 
 ## 총점 범위 변경
 - 기존 ±5(5개 지표) → +5 / -6 (STRC는 음수만 가능한 비대칭 6번째 지표)
@@ -62,7 +64,7 @@ def compute_score(indicator_scores, strc_severe_depeg=False):
 
 ## 메시지 표시 (bot.py)
 - 기존 지표 라인 목록에 STRC 디페그 자동 추가 (5번째 지표와 동일한 포맷)
-- 심각 디페그 시 메시지 하단에 별도 경고 줄 추가: `⚠️ STRC 심각 디페그 — 신용 스트레스 경고 (시그널 CAUTION 이하로 제한됨)`
+- 심각 디페그 시 메시지 하단에 별도 경고 줄 추가: `⚠️ STRC 심각 디페그 — 신용 스트레스로 STRONG SHORT 강제 (원점수 {total:+d})`
 
 ## 테스트
 - `test_signals.py`에 `score_strc_depeg`, `is_strc_severe_depeg` 단위 테스트 추가 (LONG 케이스 없음 — 0/-1만)
