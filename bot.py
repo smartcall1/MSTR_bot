@@ -98,19 +98,18 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
     lines.append(f"{prefix}{sig_emoji} MSTR 시그널: {signal_ko}  (점수: {total:+d})")
     lines.append("")
 
-    lines.append("📊 자동 지표:")
+    lines.append("📊 자동 지표")
     for ind in indicators:
         emoji = "❌" if ind["error"] else SCORE_EMOJI[ind["score"]]
-        direction = "" if ind["error"] else INDICATOR_DIRECTION_KO[ind["score"]]
+        direction = "" if ind["error"] else f" → {INDICATOR_DIRECTION_KO[ind['score']]}"
         err_note = " (스크래핑 실패)" if ind["error"] else ""
-        lines.append(f"  {ind['name']:<18} {ind['value_str']:<12} → {emoji} {direction}{err_note}")
+        lines.append(f"{emoji} {ind['name']} {ind['value_str']}{direction}{err_note}")
 
     if targets_result and mstr_price:
         lines.append("")
         direction_str = SIGNAL_DIRECTION.get(signal, "watch")
         arrow = "📈 롱" if direction_str == "long" else "📉 숏"
-        lines.append(f"💰 펍덱 진입 가이드 (현재가 ${mstr_price:.2f}):")
-        lines.append(f"  {arrow} 기준:")
+        lines.append(f"💰 진입 가이드 (현재가 ${mstr_price:.2f}, {arrow})")
         tp1_p = targets_result["tp1_price"]
         tp2_p = targets_result["tp2_price"]
         sl_p = targets_result["sl_price"]
@@ -119,16 +118,15 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
         sl_pct = targets_result["sl_pct"]
         tp1_label = targets_result.get("tp1_label", "")
         tp2_label = targets_result.get("tp2_label", "")
-        lines.append(f"    SL:  ${sl_p:.2f}  ({sl_pct:+.1f}%)  [2×ATR14]")
-        lines.append(f"    TP1: ${tp1_p:.2f}  ({tp1_pct:+.1f}%)  [{tp1_label}]")
-        lines.append(f"    TP2: ${tp2_p:.2f}  ({tp2_pct:+.1f}%)  [{tp2_label}]")
+        lines.append(f"SL  ${sl_p:.2f} ({sl_pct:+.1f}%)")
+        lines.append(f"TP1 ${tp1_p:.2f} ({tp1_pct:+.1f}%) {tp1_label}")
+        lines.append(f"TP2 ${tp2_p:.2f} ({tp2_pct:+.1f}%) {tp2_label}")
 
         if funding_rate is not None:
             daily = compute_funding_cost(funding_rate, 100)
             direction_note = "지출" if direction_str == "long" and funding_rate > 0 else "수취"
             lines.append("")
-            lines.append(f"  💸 MSTR 펀딩: {funding_rate*100:.4f}%/8h")
-            lines.append(f"     $100당 하루 약 ${abs(daily):.4f} {direction_note}")
+            lines.append(f"💸 펀딩 {funding_rate*100:.4f}%/8h ($100당 ${abs(daily):.4f} {direction_note})")
 
     lines.append("")
     lines.append(f"🕐 {ts}")
