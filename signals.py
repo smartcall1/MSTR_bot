@@ -173,7 +173,7 @@ def fetch_mstr_funding_rate():
 def compute_all_indicators(mnav_result, market_data, funding_rate, btc_yield_result, config):
     """
     모든 지표를 계산하여 결과 반환.
-    Returns: indicators (list), total_score (int), signal (str), errors (list)
+    Returns: indicators (list), total_score (int), signal (str), errors (list), strc_severe (bool)
     """
     indicators = []
     errors = []

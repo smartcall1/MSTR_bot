@@ -86,7 +86,7 @@ def format_message(indicators, total, signal, targets_result, funding_rate, mstr
 
     lines = []
     prefix = "☀️ [일일 요약] " if is_daily else ""
-    lines.append(f"{prefix}{sig_emoji} MSTR Signal: {signal}  (Score: {total:+d}/5)")
+    lines.append(f"{prefix}{sig_emoji} MSTR Signal: {signal}  (Score: {total:+d})")
     lines.append("")
 
     lines.append("📊 자동 지표:")
