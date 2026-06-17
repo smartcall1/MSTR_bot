@@ -10,7 +10,12 @@ SIGNAL_LABELS = {
     3: "LONG BIAS", 2: "LONG BIAS",
     1: "WATCH / NEUTRAL", 0: "WATCH / NEUTRAL", -1: "WATCH / NEUTRAL",
     -2: "CAUTION", -3: "CAUTION",
-    -4: "STRONG SHORT", -5: "STRONG SHORT",
+    -4: "STRONG SHORT", -5: "STRONG SHORT", -6: "STRONG SHORT",
+}
+
+SIGNAL_SEVERITY = {
+    "STRONG LONG": 2, "LONG BIAS": 1, "WATCH / NEUTRAL": 0,
+    "CAUTION": -1, "STRONG SHORT": -2,
 }
 
 BINANCE_FAPI = "https://fapi.binance.com/fapi/v1/premiumIndex"
@@ -83,9 +88,11 @@ def is_strc_severe_depeg(strc_price):
     return discount_pct > 10
 
 
-def compute_score(indicator_scores):
+def compute_score(indicator_scores, strc_severe_depeg=False):
     total = sum(indicator_scores)
     signal = SIGNAL_LABELS.get(total, "WATCH / NEUTRAL")
+    if strc_severe_depeg and SIGNAL_SEVERITY[signal] > SIGNAL_SEVERITY["STRONG SHORT"]:
+        signal = "STRONG SHORT"
     return total, signal
 
 

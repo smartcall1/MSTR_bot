@@ -156,3 +156,39 @@ def test_fetch_yfinance_data_strc_price_none_when_empty():
 
     assert result is not None
     assert result["strc_price"] is None
+
+
+def test_compute_score_total_minus_six_is_strong_short():
+    total, signal = compute_score([-1, -1, -1, -1, -1, -1])
+    assert total == -6
+    assert signal == "STRONG SHORT"
+
+
+def test_compute_score_severe_depeg_forces_strong_long_to_strong_short():
+    total, signal = compute_score([1, 1, 1, 1, 0, 0], strc_severe_depeg=True)
+    assert total == 4
+    assert signal == "STRONG SHORT"
+
+
+def test_compute_score_severe_depeg_forces_long_bias_to_strong_short():
+    total, signal = compute_score([1, 0, 0, 1, 1, 0], strc_severe_depeg=True)
+    assert total == 3
+    assert signal == "STRONG SHORT"
+
+
+def test_compute_score_severe_depeg_forces_caution_to_strong_short():
+    total, signal = compute_score([-1, -1, 0, 0, 0, 0], strc_severe_depeg=True)
+    assert total == -2
+    assert signal == "STRONG SHORT"
+
+
+def test_compute_score_severe_depeg_leaves_already_strong_short_unchanged():
+    total, signal = compute_score([-1, -1, -1, -1, -1, -1], strc_severe_depeg=True)
+    assert total == -6
+    assert signal == "STRONG SHORT"
+
+
+def test_compute_score_not_severe_leaves_signal_unchanged():
+    total, signal = compute_score([1, 1, 1, 1, 0, 0], strc_severe_depeg=False)
+    assert total == 4
+    assert signal == "STRONG LONG"
